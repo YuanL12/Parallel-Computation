@@ -8,6 +8,8 @@ int main(int argc, char const *argv[])
     {
         id = omp_get_thread_num();
         printf("Hello, OMP from thread %d\n", id);
+
+        
         #pragma omp barrier
         if(id == 0){
             nthreads = omp_get_num_threads();
