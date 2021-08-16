@@ -1,5 +1,5 @@
 # Define Macros
-CXX = g++
+CXX = g++-10
 IFLAGS = -I../include
 CXXFLAGS = -Wall -std=c++17 -Wextra -fopenmp
 DBFLAGS = -g -O0
@@ -28,4 +28,4 @@ DEPS = hellomake.h
 
 .PHONY: clean
 clean:
-	rm -f *.o
+	rm -f *.out
