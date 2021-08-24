@@ -1,22 +1,45 @@
 # Overview
 This is a repository used to store personal learning process of OpenMP. OpenMP is a Compiler-side solution for creating code that runs on multiple cores/threads. I also listed some useful links I looked here.
 
-In order to compile it manually, use the flag '-fopenmp'
+In order to compile it 
+### manually in **linux**, use the flag '-fopenmp'
 ```
 g++ -o hello_omp.out hello_omp.cpp -fopenmp
 ```
 
-or by makefile 
+### in **Mac**:
+```
+g++-10 -o hello_omp.out hello_omp.cpp -fopenmp
+```
+
+> **_Attention_**:
+> If you use `g++ -o hello_omp.out hello_omp.cpp -fopenmp` in Mac, it will return an error like `clang: error: unsupported option '-fopenmp'`, and this is because g++ in Mac is default to use clang like `Apple clang version 12.0.0 (clang-1200.0.32.29)` in my case. You will need Homebrew to install GCC. The details of installation is listed below:
+- Install gcc by Homebrew
+```
+brew install gcc
+```
+- Find the location of the newly installed gcc. Brew appends the version number to gcc so that it does not conflict with the one installed by Command Line Tools. You will find it in usr/local/bin. In my case it's usr/local/bin/gcc-10.
+
+- Now you need to tell your system about it. When calling a compiler your bash will look into `/usr/bin` by default and not in `/usr/local/bin`. You need to add this directory to your `$PATH`. This can be easily done with the command:
+
+```
+vim ~/.zshrc
+```
+ann then change 
+```
+export PATH=/usr/local/bin:$PATH
+```
+
+### by **makefile** 
 ```
 make hello_omp.out
 ./hello_omp.out
 ```
 
-or in RCC
+### in **RCC**
 ```
 sbatch ./run.sbatch
 ```
-
 
 
 ## Notes of OpenMP
@@ -53,6 +76,33 @@ work2();
 } // An implicit barrier
 }
 ```
+    /*-- Some work performed here --*/ 
+    #pragma omp barrier // Correction: remove this barrier
+}
+work2(){
+    /*-- Some work performed here --*/
+}
+main(){ 
+    #pragma omp parallel sections 
+    { 
+        #pragma omp section
+        work1(); 
+
+        #pragma omp section
+        work2();
+    } // An implicit barrier
+}
+```
+If executed by two threads, this program never finishes: Thread1 executing work1 waits forever in the explicit barrier, which thread2 will never encounter; Thread2 executing work2 waits forever in the implicit barrier at the end of the parallel sections construct, which thread1 will never encounter. *Note*: Do not insert a barrier that is not encountered by all threads of the same team.
+
+- `#pragma omp master` defines a block of code that is guaranteed to be executed by the
+master thread only. The master construct is often used (in combination with barrier construct) to initialize data, which is a preferable compared to the single construct
+
+
+> **_Attention:_** 
+> **Data race conditions** arise when multithreads read or write the same shared data simultaneously. It will not return the correct answer. Thus, we hope to update update a shared variable safely.
+
+- `#pragma omp atomic` atomic structure  is applied only to the (single) assignment statement that immediately follows it. It will perform sequentially, and so there is performance penalty for using atomic, because the system coordinates all threads.  
 
 ### Barrier and Critical Directives 
 Used to managing processes:
@@ -66,7 +116,7 @@ Used to managing processes:
 
 The **barrier** directive stops all processes for proceeding to the next line of code until all processes have reached the barrier, to ensure one process doesn’t get ahead of another. This allows a programmer to **synchronize** sequences in the parallel process.
 
-The **critical** directive ensures that a line of code is only run by one process at a time, ensuring thread safety in the body of code.
+The **critical** directive ensures that a line of code is only run by one process at a time, ensuring thread safety in the body of code. When a thread encounters a critical construct, it waits until no other thread is executing a critical region with the same name.
 
 ### Work Sharing Directive: omp for
 The directive omp for divides a normally serial for loop into a parallel task. Syntax:
@@ -94,11 +144,11 @@ Next we must join our threads. To do this we must use a critical directive to cr
         total_Sum += partial_Sum;
     }
 ```
-## A great general introduction for OpenMP
+## Tutorial resoruces for OpenMP
 https://www.bilibili.com/video/BV1964y127N9?from=search&seid=6613636337143045897
 Cover some basic knowledge and visualization about the construction of cores/memomry. 
 
-https://www.bu.edu/tech/files/2017/09/OpenMP_2017Fall.pdf
+https://www.bu.edu/tech/files/2017/09/OpenMP_2017Fall.pdf provides a quick overview.
 
 ## Reduction Clause
 https://pages.tacc.utexas.edu/~eijkhout/pcse/html/omp-reduction.html
