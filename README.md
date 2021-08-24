@@ -38,6 +38,21 @@ sbatch ./run.sbatch
 }
 ```
 - `#pragma omp single` The code block following the single construct is executed by one thread only and the other threads wait at a barrier until the executing thread has completed. The executing thread could be any thread (not necessary the master one). Useful for initializing variables, otherwise multiple threads will assign the value to a variable at the same time, potentially resulting in a memory problem.
+- `#pragma omp barrier` Threads wait for each other at a barrier. No thread may proceed beyond a barrier until all threads in the team have reached the barrier. **TAKE CARE**:  Illegal use of the barrie can cause **dead lock** 
+```C++
+work1(){
+/*-- Some work performed here --*/ #pragma omp barrier // Correction: remove this barrier
+}
+work2(){
+/*-- Some work performed here --*/
+}
+main(){ #pragma omp parallel sections 
+{ #pragma omp section
+work1(); #pragma omp section
+work2();
+} // An implicit barrier
+}
+```
 
 ### Barrier and Critical Directives 
 Used to managing processes:
